@@ -1,4 +1,4 @@
-import { Actor, Dataset } from 'scrapely';
+import { Actor, Dataset, RequestQueue } from 'scrapely';
 
 await Actor.init();
 
@@ -19,15 +19,39 @@ async function main() {
     ];
     const timeout = input.timeout || 30000;
     
-    console.log(`[Example Scraper] Starting scrape of ${domains.length} domains...`);
-
-    const results = [];
-
+    // Get or create the default Request Queue
+    const requestQueue = await RequestQueue.open();
+    
+    console.log(`[Example Scraper] Adding ${domains.length} domains to Request Queue...`);
+    
+    // Add all domains to the Request Queue
     for (const domain of domains) {
         const url = domain.startsWith('http') ? domain : `https://${domain}`;
+        await requestQueue.addRequest({ url, userData: { domain } });
+    }
+    
+    const queueInfo = await requestQueue.getInfo();
+    console.log(`[Example Scraper] Request Queue created with ${queueInfo.totalRequestCount} requests`);
+    console.log(`[Example Scraper] Starting to process requests...`);
+
+    let processedCount = 0;
+    let successfulCount = 0;
+
+    // Process requests from the queue
+    while (true) {
+        // Get the next request from the queue
+        const request = await requestQueue.fetchNextRequest();
+        
+        if (!request) {
+            console.log('[Example Scraper] No more requests in queue');
+            break;
+        }
+        
+        const { url, userData } = request;
+        const domain = userData?.domain || url;
         
         try {
-            console.log(`[Scraping] ${url}`);
+            console.log(`[Processing] ${url}`);
             
             const response = await fetch(url, {
                 headers: {
@@ -73,7 +97,7 @@ async function main() {
             };
             
             await Dataset.pushData(result);
-            results.push(result);
+            successfulCount++;
             
             console.log(`[Scraped] ${domain} -> ${title || 'No title'}`);
             
@@ -86,18 +110,26 @@ async function main() {
             };
             
             await Dataset.pushData(errorResult);
-            results.push(errorResult);
             
             console.log(`[Error] ${domain}: ${err.message}`);
         }
+        
+        // Mark the request as handled (removes it from pending)
+        await requestQueue.markRequestHandled(request);
+        processedCount++;
     }
-
-    // Display results summary
-    console.log('\n=== Scraped Results ===');
-    console.log(JSON.stringify(results, null, 2));
     
-    const successful = results.filter(r => !r.error).length;
-    console.log(`\n[Example Scraper] Complete! Scraped ${successful}/${domains.length} domains successfully.`);
+    // Get final queue stats
+    const finalQueueInfo = await requestQueue.getInfo();
+    
+    console.log('\n=== Scraping Complete ===');
+    console.log(`Total requests processed: ${processedCount}`);
+    console.log(`Successful: ${successfulCount}`);
+    console.log(`Failed: ${processedCount - successfulCount}`);
+    console.log(`\nRequest Queue Stats:`);
+    console.log(`  - Total: ${finalQueueInfo.totalRequestCount}`);
+    console.log(`  - Handled: ${finalQueueInfo.handledRequestCount}`);
+    console.log(`  - Pending: ${finalQueueInfo.pendingRequestCount}`);
 }
 
 main().catch(err => {
