@@ -2,19 +2,44 @@
   "name": "example-scraper",
   "version": "1.0.0",
   "buildTag": "latest",
-  "description": "A simple example scraper that extracts page titles and content from example.com",
+  "description": "A simple example scraper that fetches and extracts page info from multiple domains using basic HTTP requests",
   "title": "Example Scraper",
   "inputSchema": {
     "type": "object",
     "title": "Example Scraper Input",
-    "description": "Configure the scraper",
+    "description": "Configure the scraper with a list of domains to scrape",
     "properties": {
-      "url": {
-        "title": "Start URL",
-        "type": "string",
-        "description": "The URL to start scraping from",
-        "default": "https://example.com",
-        "editor": "textfield"
+      "domains": {
+        "title": "Domains to Scrape",
+        "type": "array",
+        "description": "List of domains to fetch and extract info from. Can be domain names (example.com) or full URLs (https://example.com)",
+        "default": [
+          "example.com",
+          "httpbin.org",
+          "jsonplaceholder.typicode.com",
+          "github.com",
+          "stackoverflow.com",
+          "reddit.com",
+          "twitter.com",
+          "linkedin.com",
+          "medium.com",
+          "dev.to"
+        ],
+        "items": {
+          "type": "string",
+          "title": "Domain",
+          "editor": "textfield"
+        },
+        "editor": "stringList"
+      },
+      "timeout": {
+        "title": "Request Timeout (ms)",
+        "type": "integer",
+        "description": "Timeout in milliseconds for each HTTP request",
+        "default": 30000,
+        "minimum": 1000,
+        "maximum": 120000,
+        "editor": "number"
       }
     }
   },
