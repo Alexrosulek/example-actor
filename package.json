@@ -1,0 +1,11 @@
+{
+  "name": "example-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A simple example scraper for example.com",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {}
+}

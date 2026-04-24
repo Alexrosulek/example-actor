@@ -1,0 +1,22 @@
+{
+  "name": "example-scraper",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "description": "A simple example scraper that extracts page titles and content from example.com",
+  "title": "Example Scraper",
+  "inputSchema": {
+    "type": "object",
+    "title": "Example Scraper Input",
+    "description": "Configure the scraper",
+    "properties": {
+      "url": {
+        "title": "Start URL",
+        "type": "string",
+        "description": "The URL to start scraping from",
+        "default": "https://example.com",
+        "editor": "textfield"
+      }
+    }
+  },
+  "environmentVariables": {}
+}
